@@ -23,7 +23,8 @@ const NOTIFIER_ENDPOINT = process.env.NOTIFIER_ENDPOINT;
 
 // FFmpeg related config
 const FFMPEG_INPUT = process.env.FFMPEG_INPUT;
-const FFMPEG_OUTPUTS = process.env.FFMPEG_OUTPUTS.split(',');
+// const FFMPEG_OUTPUTS = process.env.FFMPEG_OUTPUTS.split(',');
+const FFMPEG_OUTPUTS = process.env.FFMPEG_OUTPUTS;
 
 // Test related config
 const ENABLE_TEST = JSON.parse(process.env.ENABLE_TEST);
@@ -80,7 +81,7 @@ let ffmpeg = null;
 let conf = {
   id: 'N/A',
   gop: 25,
-  bitrate: 3000
+  bitrate: 20000
 };
 let stats = {
   id: {
@@ -159,7 +160,7 @@ const args = [
 //---- VIDEO ENCODING
 //   '-r', '25',
   '-c:v', 'libx264',
-  '-crf', '10',
+  // '-crf', '10',
   '-preset', 'ultrafast',
   '-tune', 'zerolatency',
   // '-b:v', '3000k',
@@ -172,27 +173,31 @@ const args = [
 //---- AUDIO ENCODING
   // '-c:a', 'copy',
   // '-an',
-  '-c:a', 'libfdk_aac',
+  // '-c:a', 'libfdk_aac',
+  '-c:a', 'aac',
   // '-flags', '+global_header', // need to fix tee pseudo muxer (is not to be set in case of udp outputs only)
-  '-ar', '44100',
+  // '-ar', '44100',
 //---- OUTPUT
   // '-f', 'flv',
   // '-f', 'mpegts',
   // 'udp://[1050:3::2]:5004' //Demonstrator
   // 'udp://[1050:3::4]:5004' //Speech-to-Text
   // 'udp://[1050:3::5]:5004' //Traffic manager
-  '-f', 'tee',
-  '-map', '0:v',
-  '-map', '0:a',
+  // '-f', 'tee',
+  '-f', 'mpegts',
+  // '-map', '0:v',
+  // '-map', '0:a',
   // '[f=flv]rtmp://localhost/live/stream|[f=mpegts]udp://[1050:3::2]:5004|[f=mpegts]udp://[1050:3::4]:5004'
   // '[f=mpegts]udp://[1050:3::2]:5004|[f=mpegts]udp://[1050:3::4]:5004'
   // '[f=mpegts]udp://[1050:3::4]:5004|[f=mpegts]udp://[1050:3::5]:5004'
-  '[flush_packets=0:f=mpegts]udp://' + FFMPEG_OUTPUTS.join('?pkt_size=1316|[flush_packets=0:f=mpegts]udp://') + '?pkt_size=1316'
+  // '[flush_packets=0:f=mpegts]udp://' + FFMPEG_OUTPUTS.join('?pkt_size=1316|[flush_packets=0:f=mpegts]udp://') + '?pkt_size=1316'
+  // 'udp://' + FFMPEG_OUTPUTS + '?pkt_size=1316'
+  FFMPEG_OUTPUTS
 ];
 const opts = {stdio: ['inherit', 'pipe', 'pipe']};
 
 function spawnFFmpeg() {
-  console.log('ffmpeg is starting...');
+  console.log('FFmpeg is starting...');
   //notify(notifyState.start);
   ffmpeg = spawn('ffmpeg', args, opts)
     .once('close', () => {
@@ -257,6 +262,11 @@ fastify.post('/gop/:g', (request, reply) => {
   conf.gop = parseInt(request.params.g);
   ffmpeg.exit();
   reply.send({status: true, gop: conf.gop});
+});
+
+fastify.get('/refresh/', (request, reply) => {
+  ffmpeg.kill();
+  reply.send({status: true});
 });
 
 fastify.listen(API_PORT, '0.0.0.0', (err, address) => {
@@ -396,7 +406,8 @@ macaddress.all((err, all) => {
       if (all.hasOwnProperty(key))
         ids.push(all[key]['mac']);
     }
-    ids.push((execSync('./dmidecode.sh | grep UUID | awk \'{print $2}\'')).toString().trim());
+    // ids.push((execSync('./dmidecode.sh | grep UUID | awk \'{print $2}\'')).toString().trim());
+    ids.push('0702ht52-12h6-761t-9syh-8hd67418j732'.toString().trim())
     conf.id = ids;
     console.log(JSON.stringify(ids));
   }
