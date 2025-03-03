@@ -59,8 +59,9 @@ COPY . /opt/
 # Install ffmpeg
 RUN mkdir -p ~/ffmpeg_sources ~/bin && \
     cd ~/ffmpeg_sources && \
-    wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2 && \
-    tar xjvf ffmpeg-snapshot.tar.bz2 && \
+    wget -O ffmpeg-4.3.tar.bz2 https://ffmpeg.org/releases/ffmpeg-4.3.tar.bz2 && \
+    tar xjvf ffmpeg-4.3.tar.bz2 && \
+    mv ffmpeg-4.3 ffmpeg && \
     cd ffmpeg && \
     patch -p1 ~/ffmpeg_sources/ffmpeg/fftools/ffmpeg.c < /opt/ffmpeg.diff && \
     PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
